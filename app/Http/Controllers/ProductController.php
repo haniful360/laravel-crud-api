@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\ProductRequest;
 use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\Request;
@@ -26,13 +27,27 @@ class ProductController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(ProductRequest $request)
     {
-        $product = Product::create([
-            'name' => $request->name,
-            'price' => $request->price,
-            'description' => $request->description
-        ]);
+
+
+        try {
+            $product = Product::create([
+                'name' => $request->name,
+                'price' => $request->price,
+                'description' => $request->description
+            ]);
+
+            return response()->json([
+                'message' => 'Product created successfully',
+                'data' => new ProductResource($product)
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Product creation failed',
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -40,7 +55,7 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        //
+        return new ProductResource($product);
     }
 
     /**
@@ -48,7 +63,16 @@ class ProductController extends Controller
      */
     public function update(Request $request, Product $product)
     {
-        //
+        $product->update([
+            'name' => $request->name,
+            'price' => $request->price,
+            'description' => $request->description
+        ]);
+
+        return response()->json([
+            'message' => 'Product updated successfully',
+            'data' => new ProductResource($product)
+        ], 201);
     }
 
     /**
@@ -56,6 +80,9 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        //
+        $product->delete();
+        return response()->json([
+            'message' => 'Product deleted successfully'
+        ], 201);
     }
 }
